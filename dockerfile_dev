@@ -1,0 +1,13 @@
+#########################
+# DEVELOPMENT CONTAINER #
+FROM node:alpine 
+
+WORKDIR /usr/src/user_api
+
+COPY . .
+
+RUN npm install 
+
+EXPOSE 3000
+
+CMD [ "npm", "run","dev" ]
