@@ -17,19 +17,11 @@ passport.use(new LocalStrategy(authFields, async (email, password, done) => {
         let user = await User.findOne({ "auth.local.email": email })
         //if no user found return object containing error message
         if (!user) {
-            return done(null, false, {
-                login: {
-                    email: 'User does not exist'
-                }
-            })
+            return done(new Error('User does not exist.'), false)
         }
         //if password not correct return object containing error message
         if (!user.validatePassword(password)) {
-            return done(null, false, {
-                login: {
-                    password: 'Wrong password'
-                }
-            })
+            return done(new Error('Wrong password.'), false)
         }
         //if all checks went well continue with user object
         return done(null, user)

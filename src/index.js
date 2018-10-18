@@ -18,8 +18,12 @@ require('./config/passport')
 
 app.use('/api/user', require('./routes/routes.user'))
 
-//UnauthorizedError handler
-app.use((err, req, res, next) => err.name === 'UnauthorizedError' &&  res.status(401).json({"error" : err.name + ": " + err.message}))
+//error handler 
+app.use((err, req, res, next) => {
+    if (err.isServer) console.error(err)
+    if (err.name === 'UnauthorizedError') return res.status(401).json({"error" : err.name + ": " + err.message})
+    return res.status(err.output.statusCode).json(err.output.payload)
+})
 
 
 app.listen(constants.PORT, err => err ? console.error(err) : console.log(`Server is runing on http://${constants.HOST}:${constants.PORT}`))
