@@ -16,9 +16,19 @@
   "author": "iamwtk",
   "license": "MIT",
   "dependencies": {
+    "connect-redis": "^3.4.0",
     "dotenv": "^6.1.0",
     "eslint": "^5.7.0",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "express-jwt": "^5.3.1",
+    "express-session": "^1.15.6",
+    "jsonwebtoken": "^8.3.0",
+    "mongoose": "^5.3.4",
+    "morgan": "^1.9.1",
+    "passport": "^0.4.0",
+    "passport-facebook": "^2.1.1",
+    "passport-local": "^1.0.0",
+    "redis": "^2.8.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.51",
