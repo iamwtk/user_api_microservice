@@ -3,7 +3,14 @@ import passport from 'passport'
 const User = mongoose.model('User')
 
 
-export const get = async (req,res) => res.send('Hello World!')
+export const get = async (req,res) => {
+    try {
+        const user = await User.findById(req.payload.id, '-auth')
+        return res.json({user})
+    } catch (err) {
+        return res.status(401).json(err)
+    }
+}
 
 export const signup = async (req,res) => {
     const user = req.body.user
@@ -39,11 +46,34 @@ export const login = (req, res, next) => {
 
 export const getAll = async (req, res) => {
     try {
-        const users = await User.find({}, '-auth.local.salt -auth.local.hash')
+        const users = await User.find({}, '-auth')
         return res.json(users)
     } catch(err) {        
         return res.status(400).json(err)
     }    
+}
+
+export const deleteUser = async (req,res) => {
+    try {
+        const user = await User.findByIdAndRemove(req.body.user.id)
+        if (user) return res.json({message: 'User deleted'})
+        else return res.json({message: 'User not found'})
+    } catch (err) {
+        return res.status(400).json(err)
+    }
+}
+
+export const updateUser = async (req,res) => {
+    const userId = req.payload.role === 'admin' ? req.body.user.id : req.payload.id
+    const userData = {...req.body.user}
+    delete userData.role     
+    try {
+        const user = await User.findByIdAndUpdate(userId, userData)
+        if (user) return res.json({message: 'User updated'})
+        else return res.json({message: 'User not found'})
+    } catch (err) {
+        return res.status(400).json(err)
+    }
 }
 
 

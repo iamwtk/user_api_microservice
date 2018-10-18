@@ -11,9 +11,9 @@ dev && app.use(require('morgan')('dev'))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
-require('./config/redis')(app)
+
 require('./config/database')
-require('./models/model_user')
+require('./models/model.user')
 require('./config/passport')
 
 app.use('/api/user', require('./routes/routes.user'))

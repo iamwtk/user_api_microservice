@@ -12,22 +12,31 @@ const emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/
 const UserSchema = new Schema({
     auth: {
         local: {
-            email: {type: String, unique: true},
+            email: { type: String, required: true },
             hash: String,
             salt: String,
         }
     },
-    role: {type: String, enum: ['admin', 'user', 'shop_owner'], default: 'user'}
-    // profile: {
-    //     name: String,
-    //     phone: String,
-    //     email: {type: String, unique: true}
-    // }
+    role: {type: String, enum: ['admin', 'user', 'shop_owner'], default: 'user'},
+    profile: {
+        name: String,
+        phone: String        
+    }
 
 })
 
 //Validations
 UserSchema.path('auth.local.email').validate(email => emailRegex.test(email), 'Please enter valid email address.')
+UserSchema.path('auth.local.email').validate(async email => {
+    try {
+        const count = await mongoose.model('User', UserSchema).count({"auth.local.email": email})  
+        return count === 0
+    }
+    catch(err) {
+        return console.error(err)
+    }     
+    
+}, 'Email already exists')
 
 UserSchema.methods.setPassword = function (password) {
     this.auth.local.salt = crypto.randomBytes(16).toString('hex')
