@@ -5,7 +5,7 @@ import { isAdmin } from '../middleware/roles'
 
 const router = express.Router()
 
-router.get('/', auth.required ,UserController.get)
+router.get('/', auth.required, UserController.getSingle)
 
 router.get('/all', auth.required, isAdmin, UserController.getAll)
 

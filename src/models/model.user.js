@@ -1,6 +1,6 @@
-import mongoose from 'mongoose'
-import crypto from 'crypto'
-import jwt from 'jsonwebtoken'
+import mongoose  from 'mongoose'
+import crypto    from 'crypto'
+import jwt       from 'jsonwebtoken'
 import constants from '../config/constants'
 
 const {
@@ -12,15 +12,15 @@ const emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/
 const UserSchema = new Schema({
     auth: {
         local: {
-            email: { type: String, required: true },
-            hash: String,
-            salt: String,
+            email:  { type: String, required: true },
+            hash:   String,
+            salt:   String,
         }
     },
-    role: {type: String, enum: ['admin', 'user', 'shop_owner'], default: 'user'},
+    role:    { type: String, enum: ['admin', 'user', 'shop_owner'], default: 'user'},
     profile: {
-        name: String,
-        phone: String        
+        name:   String,
+        phone:  String        
     }
 
 })
@@ -51,21 +51,21 @@ UserSchema.methods.validatePassword = function (password) {
 
 UserSchema.methods.generateJWT = function () {
     return jwt.sign({
-        email: this.auth.local.email,
-        id: this._id,
-        role: this.role,
-        expiresIn: 3600,
+        email:      this.auth.local.email,
+        id:         this._id,
+        role:       this.role,
+        expiresIn:  3600,
     }, constants.AUTH_SECRET)
 }
 
 UserSchema.methods.toAuthJSON = function () {
     return {
-        _id: this._id,
-        email: this.auth.local.email,
-        role: this.role,
-        token: this.generateJWT(),
+        _id:    this._id,
+        email:  this.auth.local.email,
+        role:   this.role,
+        token:  this.generateJWT(),
         expire: 3600
     };
 };
 
-mongoose.model('User', UserSchema)
+export default mongoose.model('User', UserSchema)
