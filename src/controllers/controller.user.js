@@ -136,11 +136,20 @@ export const updateUser = async (req, res, next) => {
 
 
 
-const userExists = async (email, next) => {
+export const userExists = async (req, res, next) => {
     try {
-        const count = await User.countDocuments({"auth.local.email": email})        
-        return count !== 0
+        //get email from url
+        const email = req.params.email
+        
+        //count documents in database with email
+        const count = await User.countDocuments({"auth.local.email": email})
+        
+        //return if user count is more than 0
+        return res.json({userExists: count !== 0})
+
     } catch (err) {
+
+        //return any error catch
         return next(boom.badImplementation('Something went wrong', err))
     }
 } 

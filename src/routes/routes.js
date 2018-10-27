@@ -25,5 +25,7 @@ router.post('/delete', auth.required, isSuperUser, UserController.deleteUser)
 
 router.post('/update', auth.required, UserController.updateUser)
 
+router.get('/exists/:email', auth.optional, UserController.userExists)
+
 module.exports = router
 
