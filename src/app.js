@@ -13,7 +13,8 @@ app.use(bodyParser.urlencoded({ extended: false }))
 require('./models/model.user')
 require('./config/passport')
 
-app.use('/api/user', require('./routes/routes.user'))
+app.use('/api/user', require('./routes/routes'))
+
 
 //error handler 
 app.use((err, req, res, next) => {
@@ -27,7 +28,7 @@ app.use((err, req, res, next) => {
 
     return res
             .status(err.output.statusCode)
-            .json(err.output.payload)
+            .json({...err.output.payload, data: err.data})
 })
 
 export default app

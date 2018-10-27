@@ -3,11 +3,8 @@
  * @module controllers/controller.user 
  */
 
-
-import passport from 'passport'                 //authentication module
-import boom     from 'boom'                     //error handler
-import User     from '../models/model.user'     //user mongoose model
-
+import boom         from 'boom'                     //error handler
+import User         from '../models/model.user'     //user mongoose model
 
 /**
  * Returns single user from database by user id
@@ -15,15 +12,15 @@ import User     from '../models/model.user'     //user mongoose model
  * @param {Object}      res express response object
  * @param {Function}    next callback function
  */
-export const getSingle = async (req, res, next) => {        
-    try {        
+export const getSingle = async (req, res, next) => {
+        
+    try {
         //get user id 
-        const id = (req.payload && req.payload.id) ? req.payload.id : null 
+        const id = (req.payload && req.payload.id) ? req.payload.id : null
 
         //if no id call error handler as callback
-        if (!id) 
+        if (!id)
             return next(boom.unauthorized('You are not supposed to call this function'))
-
         //call database with user id
         const user = await User.findById(id, '-auth')
 
@@ -41,43 +38,31 @@ export const getSingle = async (req, res, next) => {
     }
 }
 
-
-
-export const signup = async (req, res, next) => {       
-    const user = req.body.user
-    try {
-        const UserData = new User()  
-        UserData.auth.local.email = user.email
-        UserData.setPassword(user.password)
-
-        await UserData.save()
-
-        return res.json({ user: UserData.toAuthJSON() })
-
-    } catch(err) {       
-        return next(boom.badImplementation('Something went wrong', err))
-    }
-    
-}
-
-export const login = (req, res, next) => {    
-    passport.authenticate('local', { session: false }, (err, user) => {
-        if (err) return next(boom.unauthorized(err))
-        if (user) {            
-            user.auth.local.token = user.generateJWT()
-            return res.json({ user: user.toAuthJSON() })
-        }        
-    })(req, res, next)
-}
-
+/**
+ * Gets all users from database
+ * @param {Object}      req express request object
+ * @param {Object}      res express response object
+ * @param {Function}    next callback function
+ */
 export const getAll = async (req, res, next) => {
     try {
+
+        //get users from database
         const users = await User.find({}, '-auth')
-        return res.json(users)
-    } catch(err) {        
+
+        //if returned any users return array as response
+        if (users.length > 0)        
+            return res.json(users)
+
+        //return error in callback if no users found
+        return next(boom.notFound('No users found.'))
+
+    } catch(err) { 
+        
+        //return error on any catch       
         return next(boom.badImplementation('Something went wrong', err))
     }    
-}
+} 
 
 export const deleteUser = async (req, res, next) => {
     try {
@@ -104,3 +89,11 @@ export const updateUser = async (req, res, next) => {
 
 
 
+const userExists = async (email, next) => {
+    try {
+        const count = await User.countDocuments({"auth.local.email": email})        
+        return count !== 0
+    } catch (err) {
+        return next(boom.badImplementation('Something went wrong', err))
+    }
+} 

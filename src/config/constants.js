@@ -12,4 +12,9 @@ const development = {
     AUTH_SECRET: process.env.AUTH_SECRET || 'some secret string'
 }
 
+const validation = {
+    email: /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
+    password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,100}$/g
+}
+
 export default eval(process.env.NODE_ENV)

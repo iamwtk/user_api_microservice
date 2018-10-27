@@ -1,4 +1,5 @@
 import mongoose  from 'mongoose'
+import validator from 'validator'
 import crypto    from 'crypto'
 import jwt       from 'jsonwebtoken'
 import constants from '../config/constants'
@@ -7,7 +8,7 @@ const {
     Schema
 } = mongoose
 
-const emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/
+
 
 const UserSchema = new Schema({
     auth: {
@@ -26,10 +27,10 @@ const UserSchema = new Schema({
 })
 
 //Validations
-UserSchema.path('auth.local.email').validate(email => emailRegex.test(email), 'Please enter valid email address.')
+UserSchema.path('auth.local.email').validate(email => validator.isEmail(email), 'Please enter valid email address.')
 UserSchema.path('auth.local.email').validate(async email => {
     try {
-        const count = await mongoose.model('User', UserSchema).count({"auth.local.email": email})  
+        const count = await mongoose.model('User', UserSchema).countDocuments({"auth.local.email": email})  
         return count === 0
     }
     catch(err) {

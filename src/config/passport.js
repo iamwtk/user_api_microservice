@@ -14,7 +14,7 @@ const authFields = {
 passport.use(new LocalStrategy(authFields, async (email, password, done) => {
     try {
         //search for user by email address
-        let user = await User.findOne({ "auth.local.email": email })
+        const user = await User.findOne({ "auth.local.email": email })
         //if no user found return object containing error message
         if (!user) {
             return done(new Error('User does not exist.'), false)
