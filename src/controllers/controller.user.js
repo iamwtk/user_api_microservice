@@ -66,10 +66,26 @@ export const getAll = async (req, res, next) => {
 
 export const deleteUser = async (req, res, next) => {
     try {
-        const user = await User.findByIdAndRemove(req.body.user.id)
-        if (user) return res.json({message: 'User deleted'})
-        else return next(boom.notFound('User not found'))
+        //get user id 
+        const id = (req.body && req.body.id) ? req.body.id : null
+
+        //if no id call error handler as callback
+        if (!id)
+            return next(boom.notAcceptable('User id is missing.'))
+
+        //remove user by id
+        const user = await User.findByIdAndRemove(id)
+
+        //if returned removed user return success message
+        if (user) 
+            return res.json({message: 'User deleted.'})
+
+        //return error in callback
+        return next(boom.notFound('User not found.'))
+
     } catch (err) {
+
+        //if catches error return 500
         return next(boom.badImplementation('Something went wrong', err))
     }
 }

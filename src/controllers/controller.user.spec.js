@@ -7,10 +7,9 @@ import 'sinon-mongoose'
 import chai             from 'chai'
 import boom             from 'boom'
 import {
-    getSingle,
-    signup,
-    getAll,
-    login
+    getSingle,    
+    getAll,    
+    deleteUser
 }                       from './controller.user'
 
 
@@ -157,7 +156,74 @@ describe('[USER_API] User Controller', () => {
 
             expect(boomStub.calledOnceWith('Something went wrong')).to.be.true
         })
-    })   
+    })
+    
+    describe('deleteUser()', () => {
+        let next, sandbox
+        beforeEach(() => {
+            sandbox = sinon.createSandbox()
+            next = sandbox.spy()
+        })
+        afterEach(() => {
+            sandbox.restore()
+        })
+        it('Should return error if user id is missing', async () => {
+            const   req         = {},
+                    res         = {},
+                    boomStub    = sandbox.stub(boom, 'notAcceptable')
+            
+            await deleteUser(req, res, next)
+
+            expect(next.calledOnce).to.be.true
+            expect(boomStub.calledOnceWith('User id is missing.')).to.be.true
+                
+        })
+        it('Should find user by id and remove', async () => {
+            const   req         = { body: { id: '123' } },
+                    res         = {},
+                    UserStub    = sandbox.stub(User, 'findByIdAndRemove')
+            
+            await deleteUser(req, res, next)
+
+            expect(UserStub.calledOnceWith(req.body.id)).to.be.true
+        })
+        it('Should return message on success', async () => {
+            const   req         = { body: { id: '123' } },
+                    res         = { json: sandbox.spy() }
+                    
+            sandbox.stub(User, 'findByIdAndRemove').returns(true)
+            
+            await deleteUser(req, res, next)
+
+            expect(res.json.calledOnceWith({message: 'User deleted.'})).to.be.true
+        })
+        it('Should return message on error', async () => {
+           
+            const   req         = { body: { id: '123' } },
+                    res         = { },
+                    boomStub    = sandbox.stub(boom, 'notFound')
+                    
+            sandbox.stub(User, 'findByIdAndRemove').returns(false)
+            
+            await deleteUser(req, res, next)
+
+            expect(boomStub.calledOnceWith('User not found.')).to.be.true
+       
+        })
+        it('Should return error if server throws', async () => {
+
+            const   req         = { body: { id: '123' } },
+                    res         = { },
+                    boomStub    = sandbox.stub(boom, 'badImplementation')
+                    
+            sandbox.stub(User, 'findByIdAndRemove').throws('some error')
+            
+            await deleteUser(req, res, next)
+
+            expect(boomStub.calledOnceWith('Something went wrong')).to.be.true
+        })
+        
+    })
 
 
     after((done) => {

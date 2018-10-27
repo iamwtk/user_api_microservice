@@ -9,16 +9,13 @@ import boom             from 'boom'
 import {
     signup,   
     login
-}                       from './controller.user'
+}                       from './controller.auth'
 
 
 process.env.NODE_ENV    = 'test'
 const expect            = chai.expect
 
 describe('[USER_API] Auth Controller', () => {
-
-
-
     /**
      * ./controller.user signup()
      */
