@@ -9,7 +9,8 @@ import boom             from 'boom'
 import {
     getSingle,    
     getAll,    
-    deleteUser
+    deleteUser,
+    updateUser
 }                       from './controller.user'
 
 
@@ -162,7 +163,7 @@ describe('[USER_API] User Controller', () => {
         let next, sandbox
         beforeEach(() => {
             sandbox = sinon.createSandbox()
-            next = sandbox.spy()
+            next    = sandbox.spy()
         })
         afterEach(() => {
             sandbox.restore()
@@ -223,6 +224,74 @@ describe('[USER_API] User Controller', () => {
             expect(boomStub.calledOnceWith('Something went wrong')).to.be.true
         })
         
+    })
+    describe.only('updateUser()', () => {
+        let next, sandbox, userStub
+        beforeEach(() => {
+            sandbox     = sinon.createSandbox()
+            next        = sandbox.spy()
+            userStub    = sandbox.stub(User, 'findByIdAndUpdate')
+        })
+        afterEach(() => {
+            sandbox.restore()
+        })
+        it('Should delete role from updated user data for non-admin users', async () => {
+            const   req = { payload: { id: '123', role: 'user' }, body: { user: { role: 'user' } } },
+                    res = {}
+            
+            await updateUser(req, res, next)
+            
+            expect(userStub.calledOnceWith('123',{})).to.be.true
+        })
+        it('Should call user update method with current user id if user is not admin', async () => {
+            const   req = { payload: { id: '123', role: 'user' }, body: { user: { role: 'user' } } },
+                    res = {}
+
+            await updateUser(req, res, next)
+            
+            expect(userStub.calledOnceWith('123')).to.be.true
+        })
+        it('Should call user update method with specified user id if user is admin', async () => {
+            const  req = { payload: { id: '123', role: 'superuser' }, body: { user: { id: '321' } } },
+                    res = {}
+
+            await updateUser(req, res, next)
+            
+            expect(userStub.calledOnceWith('321')).to.be.true
+        })
+        it('Should return success message if user was successfully updated', async () => {
+            const   req = { payload: { id: '123', role: 'superuser' }, body: { user: { id: '321' } } },
+                    res = { json: sandbox.spy() }
+            
+            userStub.returns(true)
+
+            await updateUser(req, res, next)
+            
+            expect(res.json.calledOnceWith({message: 'User updated'})).to.be.true
+        })
+        it('Should return error if user not found', async () => {
+            const   req         = { payload: { id: '123', role: 'superuser' }, body: { user: { id: '321' } } },
+                    res         = {},
+                    boomStub    = sandbox.stub(boom, 'notFound')
+            
+            userStub.returns(false)
+
+            await updateUser(req, res, next)
+            
+            expect(boomStub.calledOnceWith('User not found')).to.be.true
+        })
+        it('Should return error if server throws', async () => {
+            const   req         = { payload: { id: '123', role: 'superuser' }, body: { user: { id: '321' } } },
+                    res         = {},
+                    boomStub    = sandbox.stub(boom, 'badImplementation')
+            
+            userStub.throws('error')
+
+            await updateUser(req, res, next)
+            
+            expect(boomStub.calledOnceWith('Something went wrong')).to.be.true
+        })
+
     })
 
 

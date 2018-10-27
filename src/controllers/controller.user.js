@@ -39,7 +39,7 @@ export const getSingle = async (req, res, next) => {
 }
 
 /**
- * Gets all users from database
+ * Gets all users from database - should be called only by superuser
  * @param {Object}      req express request object
  * @param {Object}      res express response object
  * @param {Function}    next callback function
@@ -64,6 +64,12 @@ export const getAll = async (req, res, next) => {
     }    
 } 
 
+/**
+ * Deletes user from database - should be called only by superuser
+ * @param {Object}      req express request object
+ * @param {Object}      res express response object
+ * @param {Function}    next callback function
+ */
 export const deleteUser = async (req, res, next) => {
     try {
         //get user id 
@@ -90,15 +96,40 @@ export const deleteUser = async (req, res, next) => {
     }
 }
 
+
+/**
+ * Updates user in database - role can be updated only by superuser
+ * @param {Object}      req express request object
+ * @param {Object}      res express response object
+ * @param {Function}    next callback function
+ */
 export const updateUser = async (req, res, next) => {
-    const userId = req.payload.role === 'admin' ? req.body.user.id : req.payload.id
-    const userData = {...req.body.user}
-    delete userData.role     
     try {
+
+        //check if user has assigned admin role
+        const isSuperUser   = req.payload.role === 'superuser'        
+
+        //if user is super admin update user by id else update current user
+        const userId        =  isSuperUser ? req.body.user.id : req.payload.id
+
+        //get user data and if user is not admin delete role - can be updated only by admin
+        const userData = {...req.body.user}
+        if (!isSuperUser)
+            delete userData.role     
+
+        //update user by id with new userdata
         const user = await User.findByIdAndUpdate(userId, userData)
-        if (user) return res.json({message: 'User updated'})
-        else return next(boom.notFound('User not found'))
+
+        //if updated return success message
+        if (user) 
+            return res.json({message: 'User updated'})
+
+        //return error
+        return next(boom.notFound('User not found'))
+
     } catch (err) {
+
+        //on any catch return 500
         return next(boom.badImplementation('Something went wrong', err))
     }
 }

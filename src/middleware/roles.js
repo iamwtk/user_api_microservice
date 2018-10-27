@@ -1,10 +1,10 @@
 
-export const isAdmin = (req, res, next) => {
+export const isSuperUser = (req, res, next) => {
 
-    if (req.payload.role === 'admin') 
+    if (req.payload.role === 'superuser') 
         return next()
 
     return res
             .status(401)
-            .json({message: 'You are not an admin.'})
+            .json({message: 'You are not an superuser.'})
 }

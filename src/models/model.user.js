@@ -18,7 +18,7 @@ const UserSchema = new Schema({
             salt:   String,
         }
     },
-    role:    { type: String, enum: ['admin', 'user', 'shop_owner'], default: 'user'},
+    role:    { type: String, enum: ['superuser', 'user', 'shop_owner'], default: 'user'},
     profile: {
         name:   String,
         phone:  String        
