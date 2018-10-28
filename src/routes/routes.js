@@ -16,6 +16,8 @@ router.post('/signup', auth.optional, AuthController.signup)
 
 router.post('/login', AuthController.login)
 
+router.post('/change-password', auth.required, AuthController.changePassword)
+
 //USER
 router.get('/', auth.required, UserController.getSingle)
 

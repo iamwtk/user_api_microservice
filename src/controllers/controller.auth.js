@@ -81,3 +81,58 @@ export const login = (req, res, next) => {
         }        
     })(req, res, next)
 }
+
+
+/**
+ * Change the password
+ * @param {Object}      req express request object
+ * @param {Object}      res express response object
+ * @param {Function}    next callback function
+ */
+export const changePassword = async (req, res, next) => {
+    try {
+
+        //check if user has assigned superuser role
+        const isSuperUser = req.payload.role === 'superuser'
+
+        //if user is superuser update user by id else update current user
+        const userId = isSuperUser ? req.body.id : req.payload.id
+
+        const { old_password ,password, password_2 } = req.body
+       
+        //find user
+        const user = await User.findById(userId)
+
+        //if user not found return error
+        if(!user)
+            return next(boom.notFound('User not found'))
+
+        //if old password not valid return error
+        if(!user.validatePassword(old_password))
+             return next(boom.unauthorized('Wrong password'))
+
+        //check if both passwords match
+        if (password !== password_2)
+            return next(boom.unauthorized('Passwords do not match.'))
+
+        //check if password is valid
+        if (!Password.validate(password)) {          
+            const errorData = Password.validate(password, { list: true })
+            return next(boom.notAcceptable('Invalid password.', errorData))
+        }
+        //set new password
+        user.setPassword(password)
+
+        //update user with new password
+        await User.findByIdAndUpdate(userId, user)
+
+        //return success message
+        res.json({message: 'Password successfully changed.'})
+
+
+    } catch(err) {
+        //return error on any catch       
+        return next(boom.badImplementation('Something went wrong', err))
+    }    
+    
+}

@@ -295,7 +295,7 @@ describe('[USER_API] User Controller', () => {
 
     })
 
-    describe.only('userExists()', () => {
+    describe('userExists()', () => {
         let next, sandbox, userStub
         beforeEach(() => {
             sandbox     = sinon.createSandbox()
