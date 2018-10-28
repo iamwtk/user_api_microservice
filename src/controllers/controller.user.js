@@ -113,7 +113,7 @@ export const updateUser = async (req, res, next) => {
         const userId        =  isSuperUser ? req.body.user.id : req.payload.id
 
         //get user data and if user is not admin delete role - can be updated only by admin
-        const userData = {...req.body.user}
+        const userData      = {...req.body.user}
         if (!isSuperUser)
             delete userData.role     
 

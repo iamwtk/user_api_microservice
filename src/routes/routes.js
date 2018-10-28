@@ -18,6 +18,10 @@ router.post('/login', AuthController.login)
 
 router.post('/change-password', auth.required, AuthController.changePassword)
 
+router.get('/reset-password', auth.optional, AuthController.sendResetPasswordEmail)
+
+router.post('/reset-password', auth.optional, AuthController.resetPassword)
+
 //USER
 router.get('/', auth.required, UserController.getSingle)
 

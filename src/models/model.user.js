@@ -22,6 +22,15 @@ const UserSchema = new Schema({
     profile: {
         name:   String,
         phone:  String        
+    },
+    verification: {
+        passwordReset: {
+            token: { type: String, default: false }
+        },
+        email: {
+            token: { type: String, default: false },
+            verified: { type: Boolean, default: false }
+        }
     }
 
 })
