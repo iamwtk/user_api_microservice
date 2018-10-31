@@ -5,6 +5,7 @@
 
 import boom         from 'boom'                     //error handler
 import User         from '../models/model.user'     //user mongoose model
+import * as auth    from './controller.auth'
 
 /**
  * Returns single user from database by user id
@@ -105,7 +106,7 @@ export const deleteUser = async (req, res, next) => {
  */
 export const updateUser = async (req, res, next) => {
     try {
-
+        let updatedUser
         //check if user has assigned admin role
         const isSuperUser   = req.payload.role === 'superuser'        
 
@@ -113,12 +114,27 @@ export const updateUser = async (req, res, next) => {
         const userId        =  isSuperUser ? req.body.user.id : req.payload.id
 
         //get user data and if user is not admin delete role - can be updated only by admin
-        const userData      = {...req.body.user}
+        const userData      =  {...req.body.user}
         if (!isSuperUser)
-            delete userData.role     
+            delete userData.role 
 
-        //update user by id with new userdata
-        const user = await User.findByIdAndUpdate(userId, userData)
+        const user = await User.findById(userId)        
+       
+        
+        if (userData.profile) {
+            
+            //TODO: move this logic to user schema
+            if (userData.profile.email && (user.profile.email !== userData.profile.email)) {                
+                user.setEmail(userData.profile.email)
+                auth.sendVerificationEmail(user)
+            }               
+
+            updatedUser = user.toObject()
+            updatedUser.profile = { ...updatedUser.profile, ...userData.profile }            
+
+        }
+        
+        await User.findByIdAndUpdate(userId, updatedUser)
 
         //if updated return success message
         if (user) 

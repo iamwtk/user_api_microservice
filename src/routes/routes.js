@@ -22,6 +22,8 @@ router.get('/reset-password', auth.optional, AuthController.sendResetPasswordEma
 
 router.post('/reset-password', auth.optional, AuthController.resetPassword)
 
+router.get('/verify-email', auth.optional, AuthController.verifyEmail)
+
 //USER
 router.get('/', auth.required, UserController.getSingle)
 

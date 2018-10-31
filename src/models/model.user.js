@@ -16,22 +16,19 @@ const UserSchema = new Schema({
             email:  { type: String, required: true },
             hash:   String,
             salt:   String,
+            reset_token: String,
+            verification_token: String,
+            verified: { type: Boolean, default: false },
+            last_verified_email: String
         }
     },
     role:    { type: String, enum: ['superuser', 'user', 'shop_owner'], default: 'user'},
     profile: {
         name:   String,
-        phone:  String        
-    },
-    verification: {
-        passwordReset: {
-            token: { type: String, default: false }
-        },
-        email: {
-            token: { type: String, default: false },
-            verified: { type: Boolean, default: false }
-        }
-    }
+        phone:  String,
+        email: String          
+             
+    }   
 
 })
 
@@ -50,12 +47,21 @@ UserSchema.path('auth.local.email').validate(async email => {
 
 UserSchema.methods.setPassword = function (password) {
     this.auth.local.salt = crypto.randomBytes(16).toString('hex')
+    this.auth.local.reset_token = crypto.randomBytes(32).toString('hex')
     this.auth.local.hash = crypto.pbkdf2Sync(password, this.auth.local.salt, 10000, 512, 'sha512').toString('hex')
 }
 
 UserSchema.methods.validatePassword = function (password) {
     const hash = crypto.pbkdf2Sync(password, this.auth.local.salt, 10000, 512, 'sha512').toString('hex')
     return this.auth.local.hash === hash
+}
+
+UserSchema.methods.setEmail = function (email) {
+    this.auth.local.last_verified_email = this.auth.local.verified ? this.auth.local.email : null
+    this.auth.local.email               = email
+    this.profile.email                  = email
+    this.auth.local.verified            = false
+    this.auth.local.verification_token  = crypto.randomBytes(32).toString('hex')
 }
 
 
@@ -75,7 +81,8 @@ UserSchema.methods.toAuthJSON = function () {
         role:   this.role,
         token:  this.generateJWT(),
         expire: 3600
-    };
-};
+    }
+}
+
 
 export default mongoose.model('User', UserSchema)

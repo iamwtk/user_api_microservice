@@ -36,22 +36,22 @@ describe('[USER_API] Auth Controller', () => {
             sandbox.restore()           
         })
 
-        describe('Success', () => {
+        describe.only('Success', () => {
 
             before(() => {
                 body.user.auth.local = { password: '1aaaBB', password_2: '1aaaBB', email:'test@test.com' }
             })            
 
-            it.skip('Should create new instance of User with request data', async () => {
+            it('Should create new instance of User with request data', async () => {
                 const   req             = { body },
                         res             = {},
                         local           = { password: '1aaaBB', password_2: '1aaaBB'},
                         constructorStub = sandbox.stub(User.prototype, 'constructor')                
                                
-               
+                const UserStub = sandbox.stub(User.prototype, 'save').returns(true)
                 
                 await signup(req, res, next)
-
+                console.log(constructorStub.getCalls())
                 expect(constructorStub.calledOnceWith({...req.body.user})).to.be.true
 
             })

@@ -28,8 +28,8 @@ export const signup = async (req, res, next) => {
             return next(boom.unauthorized('No user data received.'))        
         
         //get user data    
-        const user                                      = req.body.user,
-        { auth: { local: { password, password_2 } } }   = user        
+        const user                                              = req.body.user,
+        { auth: { local: { password, password_2, email } } }    = user        
         
         //check if both passwords match
         if (password !== password_2)
@@ -40,14 +40,22 @@ export const signup = async (req, res, next) => {
             const errorData = Password.validate(password, { list: true })
             return next(boom.notAcceptable('Invalid password.', errorData))
         }
+
+        //delete email as it will be set separately
+        delete user.auth.local.email
+
         //creates new mongo user
         const UserData = new User(user)
         
         //sets user password hash   
         UserData.setPassword(password)
 
+        UserData.setEmail(email)
+
         //saves user to database
-        await UserData.save()        
+        await UserData.save() 
+        
+        sendVerificationEmail(UserData)
 
         //returns new users authorization data
         return res.json({ user: UserData.toAuthJSON() })
@@ -149,6 +157,7 @@ export const sendResetPasswordEmail = async (req, res, next) => {
         const token = jwt.sign({
             id: user._id,
             exp: Date.now() + 3600 * 1000,
+            reset_token: user.auth.local.reset_token
         }, constants.AUTH_SECRET)
         
         //TODO: implement mailer
@@ -174,14 +183,14 @@ export const resetPassword = async (req, res, next) => {
         
         const { token, password, password_2 } = req.body
 
-        const {id, exp} = await jwt.verify(token, constants.AUTH_SECRET) 
-        
-        //check if token is expired 
-        if (exp < Date.now())
-            return next(boom.unauthorized('Reset link expired, please reset your password again.'))
-
+        const {id, exp, reset_token} = await jwt.verify(token, constants.AUTH_SECRET) 
+                
         //find user
         const user = await User.findById(id)      
+        
+        //check if token is expired or was already used
+        if ((exp < Date.now()) || reset_token !== user.auth.local.reset_token)
+            return next(boom.unauthorized('Reset link expired, please reset your password again.'))
 
         //if user not found return error
         if(!user)
@@ -214,13 +223,58 @@ export const resetPassword = async (req, res, next) => {
 }
 
 
+export const sendVerificationEmail = async (user) => {
+    try { 
+        const token = jwt.sign({
+            id: user._id,
+            verification_token: user.auth.local.verification_token
+        }, constants.AUTH_SECRET)
+        
+        //TODO: implement mailer
+        await setTimeout(() => new Error(), 500)
 
-/**
- * Sets verification token and send email
- * @param {Object}      req express request object
- * @param {Object}      res express response object
- * @param {Function}    next callback function
- */
-export const sendVerificationEmail = (req, res, next) => {
+        console.log(token)
+        //TODO: change token to success message
+        return
 
+    } catch (err) {
+        //if catches error return 500
+        console.log(err)
+    }
 }
+
+
+export const verifyEmail = async (req, res, next) => {
+    try { 
+        
+        const token                         = req.query.t
+        const { id, verification_token }    = await jwt.verify(token, constants.AUTH_SECRET)  
+                
+        //find user
+        const user = await User.findById(id)
+        
+        //check if token is expired or was already used
+        if (verification_token !== user.auth.local.verification_token)
+            return next(boom.unauthorized('Verification link expired.'))
+
+        if (user.auth.local.verified)
+            return next(boom.unauthorized('Email already verified.'))
+
+        //if user not found return error
+        if(!user)
+            return next(boom.notFound('User not found')) 
+
+        //update user with new password
+        await User.findByIdAndUpdate(id, {"auth.local.verified": true})
+
+        //return success message
+        res.json({message: 'Email successfully verified'})
+
+
+    } catch(err) {
+        //return error on any catch       
+        return next(boom.badImplementation('Something went wrong', err))
+    }
+    
+}
+
