@@ -10,6 +10,7 @@ import User         from '../models/model.user'     //user mongoose model
 import Password     from '../config/password-validator' //password validator
 import constants    from '../config/constants'
 import jwt          from 'jsonwebtoken'             //webtoken generator
+import axios        from 'axios'
 
 
 
@@ -160,11 +161,22 @@ export const sendResetPasswordEmail = async (req, res, next) => {
             reset_token: user.auth.local.reset_token
         }, constants.AUTH_SECRET)
         
-        //TODO: implement mailer
-        await setTimeout(() => console.log('email sent'), 500)
+        const data = {
+            template: {
+                service: "user_api",
+                name: "password_reset",
+                lang: 'en_US'
+            },
+            mail: {
+                name: user.profile.name,
+                email: user.profile.email,
+                link: `http://192.168.168.176:3000/user/reset-password?t=${token}`
+            }
+        }
 
-        //TODO: change token to success message
-        return res.json({token})
+        await axios.post('http://192.168.168.176:3001/api/mailer', data)
+
+        return res.json({message: 'Check your email.'})
 
     } catch (err) {
         //if catches error return 500
@@ -230,11 +242,22 @@ export const sendVerificationEmail = async (user) => {
             verification_token: user.auth.local.verification_token
         }, constants.AUTH_SECRET)
         
-        //TODO: implement mailer
-        await setTimeout(() => new Error(), 500)
+        
+        const data ={
+            template: {
+                service: "user_api",
+                name: "email_verification",
+                lang: 'en_US'
+            },
+            mail: {
+                name: user.profile.name,
+                email: user.profile.email,
+                link: `http://192.168.168.176:3000/api/user/verify-email?t=${token}`
+            }
+        }
 
-        console.log(token)
-        //TODO: change token to success message
+        await axios.post('http://192.168.168.176:3001/api/mailer', data)
+        
         return
 
     } catch (err) {
