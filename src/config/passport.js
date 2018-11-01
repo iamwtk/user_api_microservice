@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import passport from 'passport'
 import LocalStrategy from 'passport-local'
+import FacebookStrategy from 'passport-facebook'
 
 const User = mongoose.model('User')
 
